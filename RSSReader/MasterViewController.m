@@ -34,12 +34,6 @@
     [super viewDidLoad];
     feeds = [[NSMutableArray alloc] init];
     
-//    TODO: Title isn't working properly!
-//    Sample Feeds
-//    feeds = [NSMutableArray arrayWithObjects:@"http://feeds.feedburner.com/CoryWilesBlog",
-//                  @"http://michaelcrump.net/feed",
-//                  nil];
-    
     NSArray *_feeds = @[@"http://feeds.feedburner.com/CoryWilesBlog",@"http://michaelcrump.net/feed"];
     
     for (int index = 0; index < [_feeds count]; index++){
