@@ -10,6 +10,10 @@
 #import "NSDate+InternetDateTime.h"
 
 @interface MasterViewController : UITableViewController <NSXMLParserDelegate>
+{
+    BOOL isTitleElement;
+    BOOL isEntryElement;
+}
 @property (strong, nonatomic) IBOutlet UITableView *tableView;
 
 @end

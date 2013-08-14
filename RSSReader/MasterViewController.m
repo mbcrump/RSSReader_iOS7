@@ -94,7 +94,7 @@
     
     //Main Label
     NSString *articleTitle = [[feeds objectAtIndex:indexPath.row] objectForKey: @"title"];
-    cell.textLabel.text = articleTitle;
+    cell.textLabel.text = [[feeds objectAtIndex:indexPath.row] objectForKey: @"blogTitle"];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
     
@@ -124,10 +124,15 @@
     
     if ([element isEqualToString:@"entry"]) {
         item = [[NSMutableDictionary alloc] init];
+        isEntryElement = YES;
     }
     
     if ([elementName isEqualToString:@"link"]){
         link = [attributeDict valueForKey:@"href"];
+    }
+    
+    if ([elementName isEqualToString:@"title"]){
+        isTitleElement = YES;
     }
 }
 
@@ -138,6 +143,7 @@
         [item setObject:title forKey:@"title"];
         [item setObject:link forKey:@"link"];
         [item setObject:published forKey:@"published"];
+        [item setObject:blogTitle forKey:@"blogTitle"];
         
         [feeds addObject:item];
     }
@@ -157,13 +163,20 @@
         
     }
         
-    if ([element isEqualToString:@"title"])
+    if ([element isEqualToString:@"title"]){
         title = formattedString;
+        if (!isEntryElement && isTitleElement){
+            blogTitle = title;
+        }
+    }
 }
 
 - (void)parserDidEndDocument:(NSXMLParser *)parser {
     
     [self.tableView reloadData];
+    
+    isTitleElement = NO;
+    isEntryElement = NO;
     
 }
 
@@ -175,8 +188,6 @@
         [[segue destinationViewController] setUrl:string];
         
     }
-
-
 }
 
 @end
