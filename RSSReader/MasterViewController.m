@@ -99,10 +99,8 @@
     NSString *articleDateString = [dateFormatter stringFromDate:[[feeds objectAtIndex:indexPath.row] objectForKey: @"published"]];
     
     //Detail
-   //  cell.textLabel.text = [NSString stringWithFormat:@"%@", articleDateString];
-     cell.detailTextLabel.text =  [NSString stringWithFormat:@"%@ - %@", articleDateString, articleTitle];
+    cell.detailTextLabel.text =  [NSString stringWithFormat:@"%@ - %@", articleDateString, articleTitle];
    
-    //  NSLog(@"%@", [articleDateString]);
     return cell;
 }
 
