@@ -1,2 +1,5 @@
-RSSReader built for iOS7 to consume multiple feeds .
-=========
+RSSReader built for iOS7.
+========================================
+
+Sample code for an RSSReader that works on iOS7. 
+
