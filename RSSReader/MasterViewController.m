@@ -34,29 +34,33 @@
     [super viewDidLoad];
     feeds = [[NSMutableArray alloc] init];
     
-    NSArray *_feeds = @[@"http://feeds.feedburner.com/CoryWilesBlog",@"http://michaelcrump.net/feed"];
+    NSArray *_feeds = @[@"http://www.raywenderlich.com/feed",@"http://feeds.feedburner.com/CoryWilesBlog",@"http://michaelcrump.net/feed"];
     
-    for (int index = 0; index < [_feeds count]; index++){
-    
-        NSURL *url = [NSURL URLWithString:_feeds[index]];
-        
-        NSURLRequest *request = [NSURLRequest requestWithURL:url];
-        
-        [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+    NSURLSession *session = [NSURLSession sharedSession];
+    for (NSString *url in _feeds) {
+        [[session dataTaskWithURL:[NSURL URLWithString:url] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
             
-            parser = [[NSXMLParser alloc]initWithData:data];
+            [self parseRSSData:data];
             
-            [parser setDelegate:self];
-            [parser setShouldResolveExternalEntities:NO];
-            [parser parse];
-            
-            NSSortDescriptor *titleDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"published" ascending:NO];
-            
-            [feeds sortUsingDescriptors:@[titleDescriptor]];
-            
-            [self.tableView reloadData];
-        }];
+        }] resume];
     }
+}
+
+- (void)parseRSSData:(NSData*)data
+{
+    parser = [[NSXMLParser alloc]initWithData:data];
+    
+    [parser setDelegate:self];
+    [parser setShouldResolveExternalEntities:NO];
+    [parser parse];
+    
+    NSSortDescriptor *titleDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"published" ascending:NO];
+    
+    [feeds sortUsingDescriptors:@[titleDescriptor]];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+    });
 }
 
 - (void)didReceiveMemoryWarning
@@ -65,14 +69,12 @@
     // Dispose of any resources that can be recreated.
 }
 
-
 #pragma mark - Table View
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     return 1;
 }
-
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [feeds count];
@@ -87,8 +89,8 @@
     }
     
     //Main Label
-    NSString *articleTitle = [[feeds objectAtIndex:indexPath.row] objectForKey: @"title"];
-    cell.textLabel.text = [[feeds objectAtIndex:indexPath.row] objectForKey: @"blogTitle"];
+    NSString *articleTitle = feeds [indexPath.row] [@"title"];
+    cell.textLabel.text = feeds [indexPath.row] [@"blogTitle"];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
     
@@ -96,8 +98,7 @@
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setTimeStyle:NSDateFormatterMediumStyle];
     [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
-    NSString *articleDateString = [dateFormatter stringFromDate:[[feeds objectAtIndex:indexPath.row] objectForKey: @"published"]];
-    
+    NSString *articleDateString = [dateFormatter stringFromDate:feeds [indexPath.row] [@"published"]];
     //Detail
     cell.detailTextLabel.text =  [NSString stringWithFormat:@"%@ - %@", articleDateString, articleTitle];
    
@@ -114,14 +115,26 @@
     
     element = elementName;
     
-    if ([element isEqualToString:@"entry"]) {
+    if ([element isEqualToString:@"entry"] || [element isEqualToString:@"item"]) {
         item = [[NSMutableDictionary alloc] init];
         isEntryElement = YES;
     }
     
     if ([elementName isEqualToString:@"link"]){
-        link = [attributeDict valueForKey:@"href"];
+        //Feedburner users @"href"
+        NSString *temp = [attributeDict valueForKey:@"href"];
+        if (temp == nil) {
+        //Not Feedburner blog - ray's blog
+            //TODO: NOT WORKING Ray's LINKS are not being passed in.
+           link = [[NSString alloc] init];
+        }
+        else
+        {
+            link = temp;
+        }
+        NSLog(@"%@", link);
     }
+  
     
     if ([elementName isEqualToString:@"title"]){
         isTitleElement = YES;
@@ -130,7 +143,7 @@
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     
-    if ([elementName isEqualToString:@"entry"]) {
+    if ([elementName isEqualToString:@"entry"] || ([elementName isEqualToString:@"item"])) {
         
         [item setObject:title forKey:@"title"];
         [item setObject:link forKey:@"link"];
@@ -148,13 +161,13 @@
     if ([formattedString isEqualToString:@""])
         return;
     
-    if ([element isEqualToString:@"published"]){
+    if ([element isEqualToString:@"published"] || ([element isEqualToString:@"pubDate"])){
         
         NSDate *articleDate = [NSDate dateFromInternetDateTimeString:formattedString formatHint:DateFormatHintRFC3339];
         published = articleDate;
         
     }
-        
+    
     if ([element isEqualToString:@"title"]){
         title = formattedString;
         if (!isEntryElement && isTitleElement){
@@ -176,7 +189,9 @@
     if ([[segue identifier] isEqualToString:@"showDetail"]) {
         
         NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-        NSString *string = [feeds[indexPath.row] objectForKey: @"link"];
+        //NSString *string = [feeds[indexPath.row] objectForKey: @"link"];
+        NSString *string = feeds [indexPath.row] [@"link"];
+        
         [[segue destinationViewController] setUrl:string];
         
     }
