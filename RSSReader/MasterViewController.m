@@ -7,7 +7,6 @@
 //
 
 #import "MasterViewController.h"
-
 #import "DetailViewController.h"
 
 @interface MasterViewController () {
@@ -35,6 +34,7 @@
     feeds = [[NSMutableArray alloc] init];
     
     NSArray *_feeds = @[@"http://www.raywenderlich.com/feed",@"http://feeds.feedburner.com/CoryWilesBlog",@"http://michaelcrump.net/feed"];
+
     
     NSURLSession *session = [NSURLSession sharedSession];
     for (NSString *url in _feeds) {
@@ -120,21 +120,19 @@
         isEntryElement = YES;
     }
     
-    if ([elementName isEqualToString:@"link"]){
-        //Feedburner users @"href"
+    if ([element isEqualToString:@"link"]){
+        //Feedburner user @"href" / ray's blog does not
         NSString *temp = [attributeDict valueForKey:@"href"];
         if (temp == nil) {
-        //Not Feedburner blog - ray's blog
             //TODO: NOT WORKING Ray's LINKS are not being passed in.
-           link = [[NSString alloc] init];
-        }
+            link = [[NSString alloc] init];        }
         else
         {
             link = temp;
         }
         NSLog(@"%@", link);
-    }
-  
+     }
+
     
     if ([elementName isEqualToString:@"title"]){
         isTitleElement = YES;
@@ -174,7 +172,8 @@
             blogTitle = title;
         }
     }
-}
+    
+ }
 
 - (void)parserDidEndDocument:(NSXMLParser *)parser {
     
@@ -189,9 +188,7 @@
     if ([[segue identifier] isEqualToString:@"showDetail"]) {
         
         NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-        //NSString *string = [feeds[indexPath.row] objectForKey: @"link"];
         NSString *string = feeds [indexPath.row] [@"link"];
-        
         [[segue destinationViewController] setUrl:string];
         
     }
